@@ -1,14 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { isAuthenticated, removeAuthToken } from "@/lib/auth";
 import { getQueryFn } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
-import { DollarSign, FileText, LogOut, Receipt } from "lucide-react";
+import { DollarSign, FileText, LogOut, Receipt, Copy, Check } from "lucide-react";
 
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
+  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -37,6 +40,28 @@ export default function DashboardPage() {
   const handleLogout = () => {
     removeAuthToken();
     setLocation("/");
+  };
+
+  const copyWalletAddress = async () => {
+    if (!profile?.wallet?.publicKey) return;
+    
+    try {
+      await navigator.clipboard.writeText(profile.wallet.publicKey);
+      setCopied(true);
+      toast({
+        title: "Copied!",
+        description: "Wallet address copied to clipboard",
+      });
+      
+      // Reset copied state after 2 seconds
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast({
+        title: "Failed to copy",
+        description: "Please copy the address manually",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!isAuthenticated()) {
@@ -228,19 +253,28 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
+            <div 
+              onClick={copyWalletAddress}
+              className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white cursor-pointer hover:from-purple-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
+            >
               <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Wallet Address</h3>
-                  <p className="text-purple-100 text-sm font-mono text-xs break-all">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <h3 className="text-lg font-semibold">Wallet Address</h3>
+                    {copied && <Check className="w-4 h-4 text-green-300" />}
+                  </div>
+                  <p className="text-purple-100 text-sm font-mono break-all">
                     {profile?.wallet?.publicKey ? 
-                      `${profile.wallet.publicKey.slice(0, 8)}...${profile.wallet.publicKey.slice(-8)}` : 
+                      profile.wallet.publicKey : 
                       'Loading...'
                     }
                   </p>
+                  <p className="text-purple-200 text-xs mt-1">
+                    {copied ? 'Copied!' : 'Click to copy'}
+                  </p>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                  <FileText className="w-6 h-6" />
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center ml-4">
+                  {copied ? <Check className="w-6 h-6" /> : <Copy className="w-6 h-6" />}
                 </div>
               </div>
             </div>
