@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { StellarService } from "./services/stellar";
 import { generateToken, authenticateToken, type AuthRequest } from "./middleware/auth";
 import { insertBusinessSchema, loginSchema, sendMoneySchema, createInvoiceSchema } from "@shared/schema";
+import { walletMonitor } from "./services/wallet-monitor";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Business registration
@@ -28,6 +29,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         secretKey: stellarWallet.secretKey,
         balance: "0",
       });
+
+      // Start monitoring the new wallet for incoming transactions
+      await walletMonitor.startMonitoring(stellarWallet.publicKey, business.id);
 
       // Generate JWT token
       const token = generateToken(business.id);

@@ -53,108 +53,148 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-primary-800 rounded-xl flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Remitro</h1>
-                <p className="text-sm text-gray-500">{profile?.business?.name}</p>
-              </div>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="w-64 bg-slate-900 text-white flex flex-col">
+        <div className="p-6">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-white" />
             </div>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocation("/admin")}
-              className="text-gray-600 hover:text-gray-800"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              Admin Panel
-            </Button>
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-              <span className="text-sm font-medium text-gray-900">
-                {profile?.business?.email}
-              </span>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="w-5 h-5" />
-              </Button>
-            </div>
+            <span className="text-xl font-bold">RemitroSuite</span>
           </div>
         </div>
-      </header>
+
+        <nav className="flex-1 px-4">
+          <div className="space-y-2">
+            <div className="text-xs uppercase tracking-wide text-gray-400 px-3 py-2">PERSONAL</div>
+            <button className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg bg-blue-600 text-white">
+              <Receipt className="w-4 h-4" />
+              <span>Dashboard</span>
+            </button>
+            <button 
+              onClick={() => setLocation("/admin")}
+              className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-slate-800"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Admin Panel</span>
+            </button>
+          </div>
+        </nav>
+
+        <div className="p-4 border-t border-slate-800">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gray-600 rounded-full"></div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">
+                {profile?.business?.name}
+              </p>
+              <p className="text-xs text-gray-400 truncate">
+                {profile?.business?.email}
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-gray-400 hover:text-white">
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Wallet Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <WalletCard wallet={profile?.wallet} />
-            
-            {/* Balance Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">XLM Balance</h3>
-                <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-green-600" />
-                </div>
+      <div className="flex-1 flex flex-col">
+        {/* Top Navigation */}
+        <header className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+              <div className="flex items-center space-x-2 text-sm text-gray-500 mt-1">
+                <span>Home</span>
+                <span>›</span>
+                <span className="text-gray-900">Dashboard</span>
               </div>
-              <div className="space-y-3">
+            </div>
+          </div>
+        </header>
+
+        {/* Dashboard Content */}
+        <main className="flex-1 p-6 overflow-auto">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {parseFloat(profile?.wallet?.balance || "0").toFixed(7)} XLM
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <DollarSign className="w-5 h-5 text-blue-600" />
+                    </div>
+                  </div>
+                  <h3 className="text-sm font-medium text-gray-500">Total Balance</h3>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
+                    {parseFloat(profile?.wallet?.balance || "0").toFixed(3)}
                   </p>
-                  <p className="text-sm text-gray-500">Available Balance</p>
-                </div>
-                <div className="pt-2 border-t border-gray-100">
-                  <p className="text-sm text-primary-600 hover:text-primary-700 font-medium cursor-pointer">
-                    Refresh Balance
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">XLM</p>
                 </div>
               </div>
             </div>
 
-            {/* Stats Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">This Month</h3>
-                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-purple-600" />
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                      <Receipt className="w-5 h-5 text-orange-600" />
+                    </div>
+                  </div>
+                  <h3 className="text-sm font-medium text-gray-500">Total Transactions</h3>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">0</p>
+                  <p className="text-xs text-gray-500 mt-1">This month</p>
                 </div>
               </div>
-              <div className="space-y-3">
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">0</p>
-                  <p className="text-sm text-gray-500">Transactions</p>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-green-600" />
+                    </div>
+                  </div>
+                  <h3 className="text-sm font-medium text-gray-500">Active Invoices</h3>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">0</p>
+                  <p className="text-xs text-gray-500 mt-1">Pending payment</p>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Volume:</span>
-                  <span className="font-medium text-gray-900">0 XLM</span>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <LogOut className="w-5 h-5 text-purple-600" />
+                    </div>
+                  </div>
+                  <h3 className="text-sm font-medium text-gray-500">Total Volume</h3>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">0.000</p>
+                  <p className="text-xs text-gray-500 mt-1">XLM sent</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Action Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <SendMoneyForm />
             <CreateInvoiceForm />
           </div>
 
-          {/* Payment Requests and Transaction History */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Data Tables */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <PaymentRequests />
             <TransactionHistory />
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );
