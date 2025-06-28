@@ -1,12 +1,9 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { isAuthenticated, removeAuthToken, getAuthToken } from "@/lib/auth";
-import { WalletCard } from "@/components/wallet-card";
-import { SendMoneyForm } from "@/components/send-money-form";
-import { TransactionHistory } from "@/components/transaction-history";
-import { CreateInvoiceForm } from "@/components/create-invoice-form";
-import { PaymentRequests } from "@/components/payment-requests";
+import { isAuthenticated, removeAuthToken } from "@/lib/auth";
+import { getQueryFn } from "@/lib/queryClient";
+
 import { Button } from "@/components/ui/button";
 import { DollarSign, FileText, LogOut, Receipt } from "lucide-react";
 
@@ -22,17 +19,7 @@ export default function DashboardPage() {
   const { data: profile, isLoading } = useQuery({
     queryKey: ["/api/profile"],
     enabled: isAuthenticated(),
-    queryFn: async () => {
-      const response = await fetch("/api/profile", {
-        headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch profile");
-      }
-      return response.json();
-    },
+    queryFn: getQueryFn({ on401: "throw" }),
   });
 
   const handleLogout = () => {
@@ -71,6 +58,20 @@ export default function DashboardPage() {
             <button className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg bg-blue-600 text-white">
               <Receipt className="w-4 h-4" />
               <span>Dashboard</span>
+            </button>
+            <button 
+              onClick={() => setLocation("/send-money")}
+              className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-slate-800"
+            >
+              <DollarSign className="w-4 h-4" />
+              <span>Send Money</span>
+            </button>
+            <button 
+              onClick={() => setLocation("/invoices")}
+              className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-slate-800"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Invoices</span>
             </button>
             <button 
               onClick={() => setLocation("/admin")}
@@ -183,16 +184,99 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Action Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <SendMoneyForm />
-            <CreateInvoiceForm />
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div 
+              onClick={() => setLocation("/send-money")}
+              className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Send Money</h3>
+                  <p className="text-blue-100 text-sm">Transfer XLM instantly</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+
+            <div 
+              onClick={() => setLocation("/invoices")}
+              className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white cursor-pointer hover:from-green-600 hover:to-green-700 transition-all duration-200 transform hover:scale-105"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Create Invoice</h3>
+                  <p className="text-green-100 text-sm">Request payments</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Receipt className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Wallet Address</h3>
+                  <p className="text-purple-100 text-sm font-mono text-xs break-all">
+                    {profile?.wallet?.publicKey ? 
+                      `${profile.wallet.publicKey.slice(0, 8)}...${profile.wallet.publicKey.slice(-8)}` : 
+                      'Loading...'
+                    }
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <FileText className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Data Tables */}
+          {/* Recent Activity */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <PaymentRequests />
-            <TransactionHistory />
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Recent Transactions</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setLocation("/send-money")}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  View All
+                </Button>
+              </div>
+              <div className="space-y-4">
+                <div className="text-center py-8 text-gray-500">
+                  <Receipt className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No transactions yet</p>
+                  <p className="text-sm">Start by sending money or creating an invoice</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Payment Requests</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setLocation("/invoices")}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  View All
+                </Button>
+              </div>
+              <div className="space-y-4">
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No payment requests</p>
+                  <p className="text-sm">Incoming payment requests will appear here</p>
+                </div>
+              </div>
+            </div>
           </div>
         </main>
       </div>
