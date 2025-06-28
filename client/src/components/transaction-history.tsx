@@ -1,22 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAuthToken } from "@/lib/auth";
-import { ArrowUpRight, ArrowDownLeft, ExternalLink } from "lucide-react";
+import { getQueryFn } from "@/lib/queryClient";
+import { ArrowUpRight, ArrowDownLeft, ExternalLink, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface Transaction {
+  id: number;
+  fromBusinessId: number | null;
+  toAddress: string;
+  toBusinessId: number | null;
+  amount: string;
+  memo: string | null;
+  stellarTxHash: string | null;
+  status: string;
+  type: string;
+  createdAt: string;
+}
+
 export function TransactionHistory() {
-  const { data: transactions, isLoading } = useQuery({
+  const { data: transactions = [], isLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
-    queryFn: async () => {
-      const response = await fetch("/api/transactions", {
-        headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch transactions");
-      }
-      return response.json();
-    },
+    queryFn: getQueryFn({ on401: "throw" }),
   });
 
   const formatAddress = (address: string) => {
@@ -46,6 +49,45 @@ export function TransactionHistory() {
     }
   };
 
+  const getTransactionIcon = (type: string) => {
+    switch (type) {
+      case "send":
+        return <ArrowUpRight className="w-5 h-5 text-red-600" />;
+      case "receive":
+        return <ArrowDownLeft className="w-5 h-5 text-green-600" />;
+      case "invoice":
+        return <Receipt className="w-5 h-5 text-blue-600" />;
+      default:
+        return <ArrowUpRight className="w-5 h-5 text-gray-600" />;
+    }
+  };
+
+  const getTransactionLabel = (transaction: Transaction) => {
+    switch (transaction.type) {
+      case "send":
+        return `Sent to ${formatAddress(transaction.toAddress)}`;
+      case "receive":
+        return `Received from ${formatAddress(transaction.toAddress)}`;
+      case "invoice":
+        return `Invoice payment to ${formatAddress(transaction.toAddress)}`;
+      default:
+        return `Transfer to ${formatAddress(transaction.toAddress)}`;
+    }
+  };
+
+  const getTransactionBackground = (type: string) => {
+    switch (type) {
+      case "send":
+        return "bg-red-100";
+      case "receive":
+        return "bg-green-100";
+      case "invoice":
+        return "bg-blue-100";
+      default:
+        return "bg-gray-100";
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
@@ -61,18 +103,18 @@ export function TransactionHistory() {
             <div className="w-6 h-6 border-2 border-primary-800 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : transactions && transactions.length > 0 ? (
-          transactions.map((transaction: any) => (
+          transactions.map((transaction: Transaction) => (
             <div
               key={transaction.id}
               className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <ArrowUpRight className="w-5 h-5 text-green-600" />
+                <div className={`w-10 h-10 ${getTransactionBackground(transaction.type)} rounded-full flex items-center justify-center`}>
+                  {getTransactionIcon(transaction.type)}
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">
-                    Sent to {formatAddress(transaction.toAddress)}
+                    {getTransactionLabel(transaction)}
                   </p>
                   <div className="flex items-center space-x-2">
                     <p className="text-sm text-gray-500">

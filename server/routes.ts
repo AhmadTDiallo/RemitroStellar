@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { StellarService } from "./services/stellar";
 import { generateToken, authenticateToken, type AuthRequest } from "./middleware/auth";
-import { insertBusinessSchema, loginSchema, sendMoneySchema } from "@shared/schema";
+import { insertBusinessSchema, loginSchema, sendMoneySchema, createInvoiceSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Business registration
@@ -127,12 +127,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid destination address" });
       }
 
+      // Check if destination is another Remitro wallet
+      const recipientWallet = await storage.getWalletByPublicKey(destinationAddress);
+      
       // Create transaction record
       const transaction = await storage.createTransaction({
         fromBusinessId: req.businessId!,
         toAddress: destinationAddress,
+        toBusinessId: recipientWallet?.businessId || null,
         amount,
         memo: memo || null,
+        type: "send",
       });
 
       try {
@@ -147,9 +152,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Update transaction status
         await storage.updateTransactionStatus(transaction.id, "completed", stellarTxHash);
 
-        // Update wallet balance
+        // Update sender wallet balance
         const newBalance = await StellarService.getXLMBalance(wallet.publicKey);
         await storage.updateWalletBalance(wallet.id, newBalance);
+
+        // If this is an internal transfer, create a receive transaction for the recipient
+        if (recipientWallet) {
+          await storage.createTransaction({
+            fromBusinessId: recipientWallet.businessId,
+            toAddress: wallet.publicKey,
+            toBusinessId: recipientWallet.businessId,
+            amount,
+            memo: memo || null,
+            type: "receive",
+          });
+
+          // Update recipient wallet balance
+          const recipientBalance = await StellarService.getXLMBalance(recipientWallet.publicKey);
+          await storage.updateWalletBalance(recipientWallet.id, recipientBalance);
+        }
 
         res.json({
           transactionId: transaction.id,
@@ -175,6 +196,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Transactions error:", error);
       res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  // Create payment request/invoice
+  app.post("/api/invoices", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { toBusinessEmail, amount, memo } = createInvoiceSchema.parse(req.body);
+      
+      // Find recipient business
+      const recipientBusiness = await storage.getBusinessByEmail(toBusinessEmail);
+      if (!recipientBusiness) {
+        return res.status(404).json({ message: "Business not found" });
+      }
+
+      // Create payment request
+      const paymentRequest = await storage.createPaymentRequest({
+        fromBusinessId: req.businessId!,
+        toBusinessId: recipientBusiness.id,
+        amount,
+        memo: memo || null,
+      });
+
+      res.json({ paymentRequest });
+    } catch (error) {
+      console.error("Create invoice error:", error);
+      res.status(400).json({ message: "Failed to create payment request" });
+    }
+  });
+
+  // Get payment requests for current business
+  app.get("/api/payment-requests", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const paymentRequests = await storage.getPaymentRequestsByBusinessId(req.businessId!);
+      
+      // Get business names for payment requests
+      const enrichedRequests = await Promise.all(
+        paymentRequests.map(async (request) => {
+          const fromBusiness = await storage.getBusinessById(request.fromBusinessId);
+          return {
+            ...request,
+            fromBusinessName: fromBusiness?.name || "Unknown",
+            fromBusinessEmail: fromBusiness?.email || "Unknown",
+          };
+        })
+      );
+
+      res.json(enrichedRequests);
+    } catch (error) {
+      console.error("Payment requests error:", error);
+      res.status(500).json({ message: "Failed to fetch payment requests" });
+    }
+  });
+
+  // Pay a payment request
+  app.post("/api/payment-requests/:id/pay", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      const paymentRequest = await storage.getPaymentRequestById(requestId);
+      
+      if (!paymentRequest) {
+        return res.status(404).json({ message: "Payment request not found" });
+      }
+
+      if (paymentRequest.toBusinessId !== req.businessId) {
+        return res.status(403).json({ message: "Not authorized to pay this request" });
+      }
+
+      if (paymentRequest.status !== "pending") {
+        return res.status(400).json({ message: "Payment request is not pending" });
+      }
+
+      // Get payer wallet
+      const payerWallet = await storage.getWalletByBusinessId(req.businessId!);
+      if (!payerWallet) {
+        return res.status(404).json({ message: "Wallet not found" });
+      }
+
+      // Get recipient wallet
+      const recipientWallet = await storage.getWalletByBusinessId(paymentRequest.fromBusinessId);
+      if (!recipientWallet) {
+        return res.status(404).json({ message: "Recipient wallet not found" });
+      }
+
+      // Create transaction record
+      const transaction = await storage.createTransaction({
+        fromBusinessId: req.businessId!,
+        toAddress: recipientWallet.publicKey,
+        toBusinessId: paymentRequest.fromBusinessId,
+        amount: paymentRequest.amount,
+        memo: paymentRequest.memo || null,
+        type: "send",
+      });
+
+      try {
+        // Send XLM on Stellar
+        const stellarTxHash = await StellarService.sendXLM(
+          payerWallet.secretKey,
+          recipientWallet.publicKey,
+          paymentRequest.amount,
+          paymentRequest.memo || undefined
+        );
+
+        // Update transaction status
+        await storage.updateTransactionStatus(transaction.id, "completed", stellarTxHash);
+
+        // Update payment request status
+        await storage.updatePaymentRequestStatus(requestId, "paid", transaction.id);
+
+        // Update both wallet balances
+        const payerBalance = await StellarService.getXLMBalance(payerWallet.publicKey);
+        const recipientBalance = await StellarService.getXLMBalance(recipientWallet.publicKey);
+        await storage.updateWalletBalance(payerWallet.id, payerBalance);
+        await storage.updateWalletBalance(recipientWallet.id, recipientBalance);
+
+        // Create receive transaction for recipient
+        await storage.createTransaction({
+          fromBusinessId: paymentRequest.fromBusinessId,
+          toAddress: recipientWallet.publicKey,
+          toBusinessId: paymentRequest.fromBusinessId,
+          amount: paymentRequest.amount,
+          memo: paymentRequest.memo || null,
+          type: "receive",
+        });
+
+        res.json({
+          transactionId: transaction.id,
+          stellarTxHash,
+          status: "completed",
+        });
+      } catch (stellarError) {
+        await storage.updateTransactionStatus(transaction.id, "failed");
+        throw stellarError;
+      }
+    } catch (error) {
+      console.error("Pay request error:", error);
+      res.status(400).json({ message: "Payment failed" });
     }
   });
 

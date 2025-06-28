@@ -5,8 +5,10 @@ import { isAuthenticated, removeAuthToken, getAuthToken } from "@/lib/auth";
 import { WalletCard } from "@/components/wallet-card";
 import { SendMoneyForm } from "@/components/send-money-form";
 import { TransactionHistory } from "@/components/transaction-history";
+import { CreateInvoiceForm } from "@/components/create-invoice-form";
+import { PaymentRequests } from "@/components/payment-requests";
 import { Button } from "@/components/ui/button";
-import { DollarSign, FileText, LogOut } from "lucide-react";
+import { DollarSign, FileText, LogOut, Receipt } from "lucide-react";
 
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
@@ -141,9 +143,15 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Send Money and Transaction History */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Action Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <SendMoneyForm />
+            <CreateInvoiceForm />
+          </div>
+
+          {/* Payment Requests and Transaction History */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <PaymentRequests />
             <TransactionHistory />
           </div>
         </div>
