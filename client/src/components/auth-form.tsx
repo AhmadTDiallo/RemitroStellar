@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -149,10 +149,17 @@ export function AuthForm({ isRegister }: AuthFormProps) {
           </div>
 
           <div className="flex items-start">
-            <Checkbox
-              id="terms"
-              {...form.register("terms")}
-              className="mt-1"
+            <Controller
+              name="terms"
+              control={form.control}
+              render={({ field }) => (
+                <Checkbox
+                  id="terms"
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  className="mt-1"
+                />
+              )}
             />
             <Label htmlFor="terms" className="ml-2 text-sm text-gray-600">
               I agree to the{" "}
