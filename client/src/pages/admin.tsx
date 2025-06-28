@@ -134,7 +134,7 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-gray-900">
-                    ${totalVolume.toFixed(2)}
+                    {totalVolume.toFixed(7)} XLM
                   </p>
                   <p className="text-sm text-gray-500">Total Volume</p>
                 </div>
@@ -234,7 +234,7 @@ export default function AdminPage() {
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {business.wallet ? `$${parseFloat(business.wallet.balance).toFixed(2)}` : "-"}
+                          {business.wallet ? `${parseFloat(business.wallet.balance).toFixed(7)} XLM` : "-"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {business.transactionCount}

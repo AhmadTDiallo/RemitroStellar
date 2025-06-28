@@ -54,7 +54,7 @@ export const loginSchema = z.object({
 
 export const sendMoneySchema = z.object({
   destinationAddress: z.string().min(56).max(56), // Stellar address length
-  amount: z.string().min(1),
+  amount: z.string().min(1).regex(/^\d+(\.\d{1,7})?$/, "Invalid XLM amount format"), // XLM has 7 decimal places
   memo: z.string().optional(),
 });
 

@@ -72,7 +72,7 @@ export function SendMoneyForm() {
         <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
           <Send className="w-6 h-6 text-primary-600" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-900">Send USDC</h3>
+        <h3 className="text-xl font-semibold text-gray-900">Send XLM</h3>
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -98,18 +98,18 @@ export function SendMoneyForm() {
 
         <div>
           <Label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
-            Amount (USDC)
+            Amount (XLM)
           </Label>
           <div className="relative">
             <Input
               id="amount"
               type="text"
               {...form.register("amount")}
-              placeholder="0.00"
+              placeholder="0.0000000"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors pr-16"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-4">
-              <span className="text-gray-500 text-sm font-medium">USDC</span>
+              <span className="text-gray-500 text-sm font-medium">XLM</span>
             </div>
           </div>
           {form.formState.errors.amount && (
@@ -118,7 +118,7 @@ export function SendMoneyForm() {
             </p>
           )}
           <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>Min: $0.01</span>
+            <span>Min: 0.0000001 XLM</span>
             <span>Network: Stellar Testnet</span>
           </div>
         </div>
@@ -146,7 +146,7 @@ export function SendMoneyForm() {
             <div>
               <h4 className="font-medium">Testnet Transaction</h4>
               <p className="text-xs mt-1">
-                This will send testnet USDC. No real money will be transferred.
+                This will send testnet XLM. No real money will be transferred.
               </p>
             </div>
           </AlertDescription>
@@ -162,7 +162,7 @@ export function SendMoneyForm() {
           ) : (
             <>
               <Send className="w-5 h-5" />
-              <span>Send USDC</span>
+              <span>Send XLM</span>
             </>
           )}
         </Button>

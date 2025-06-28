@@ -8,9 +8,6 @@ export interface StellarWallet {
 }
 
 export class StellarService {
-  private static USDC_ISSUER = "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5"; // USDC issuer on testnet
-  private static USDC_ASSET = new Asset("USDC", this.USDC_ISSUER);
-
   static async createWallet(): Promise<StellarWallet> {
     const keypair = Keypair.random();
     
@@ -20,9 +17,6 @@ export class StellarService {
       if (!response.ok) {
         throw new Error("Failed to fund testnet account");
       }
-
-      // Add USDC trustline
-      await this.addUSDCTrustline(keypair.secret());
 
       return {
         publicKey: keypair.publicKey(),
@@ -34,51 +28,21 @@ export class StellarService {
     }
   }
 
-  static async addUSDCTrustline(secretKey: string): Promise<void> {
-    try {
-      const keypair = Keypair.fromSecret(secretKey);
-      const account = await server.loadAccount(keypair.publicKey());
-
-      const transaction = new TransactionBuilder(account, {
-        fee: "100000",
-        networkPassphrase: Networks.TESTNET,
-      })
-        .addOperation(
-          Operation.changeTrust({
-            asset: this.USDC_ASSET,
-          })
-        )
-        .setTimeout(180)
-        .build();
-
-      transaction.sign(keypair);
-      await server.submitTransaction(transaction);
-    } catch (error) {
-      console.error("Error adding USDC trustline:", error);
-      throw new Error("Failed to add USDC trustline");
-    }
-  }
-
-  static async getUSDCBalance(publicKey: string): Promise<string> {
+  static async getXLMBalance(publicKey: string): Promise<string> {
     try {
       const account = await server.loadAccount(publicKey);
-      const usdcBalance = account.balances.find(
-        (balance) => 
-          balance.asset_type !== "native" && 
-          'asset_code' in balance &&
-          balance.asset_code === "USDC" &&
-          'asset_issuer' in balance &&
-          balance.asset_issuer === this.USDC_ISSUER
+      const xlmBalance = account.balances.find(
+        (balance) => balance.asset_type === "native"
       );
       
-      return usdcBalance ? usdcBalance.balance : "0";
+      return xlmBalance ? xlmBalance.balance : "0";
     } catch (error) {
-      console.error("Error getting USDC balance:", error);
+      console.error("Error getting XLM balance:", error);
       return "0";
     }
   }
 
-  static async sendUSDC(
+  static async sendXLM(
     fromSecretKey: string,
     toPublicKey: string,
     amount: string,
@@ -96,7 +60,7 @@ export class StellarService {
       transactionBuilder.addOperation(
         Operation.payment({
           destination: toPublicKey,
-          asset: this.USDC_ASSET,
+          asset: Asset.native(),
           amount: amount,
         })
       );
@@ -111,8 +75,8 @@ export class StellarService {
       const result = await server.submitTransaction(transaction);
       return result.hash;
     } catch (error) {
-      console.error("Error sending USDC:", error);
-      throw new Error("Failed to send USDC transaction");
+      console.error("Error sending XLM:", error);
+      throw new Error("Failed to send XLM transaction");
     }
   }
 

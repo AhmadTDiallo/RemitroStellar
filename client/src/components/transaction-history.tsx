@@ -96,7 +96,7 @@ export function TransactionHistory() {
               </div>
               <div className="text-right">
                 <p className="font-semibold text-gray-900">
-                  -${parseFloat(transaction.amount).toFixed(2)}
+                  -{parseFloat(transaction.amount).toFixed(7)} XLM
                 </p>
                 <p className={`text-xs px-2 py-1 rounded-full inline-block capitalize ${getStatusColor(transaction.status)}`}>
                   {transaction.status}

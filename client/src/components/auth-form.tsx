@@ -56,7 +56,7 @@ export function AuthForm({ isRegister }: AuthFormProps) {
       toast({
         title: isRegister ? "Account created successfully!" : "Welcome back!",
         description: isRegister 
-          ? "Your Stellar wallet has been created and is ready to use."
+          ? "Your Stellar wallet has been created with testnet XLM and is ready to use."
           : "You have been logged in successfully.",
       });
       setLocation("/dashboard");

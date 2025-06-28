@@ -101,7 +101,12 @@ The database uses Drizzle ORM for type-safe database operations and schema manag
 - `NODE_ENV`: Environment mode (development/production)
 
 ## Changelog
-- June 28, 2025. Initial setup
+- June 28, 2025. Initial setup with USDC integration
+- June 28, 2025. Converted from USDC to XLM (native Stellar asset) for simpler implementation
+  - Removed USDC trustline requirements
+  - Updated all UI components to show XLM instead of USDC
+  - Modified balance display to show 7 decimal places (XLM precision)
+  - Updated validation rules for XLM amounts
 
 ## User Preferences
 

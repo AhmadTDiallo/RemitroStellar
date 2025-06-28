@@ -90,8 +90,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Business or wallet not found" });
       }
 
-      // Get current USDC balance from Stellar
-      const balance = await StellarService.getUSDCBalance(wallet.publicKey);
+      // Get current XLM balance from Stellar
+      const balance = await StellarService.getXLMBalance(wallet.publicKey);
       await storage.updateWalletBalance(wallet.id, balance);
 
       res.json({
@@ -136,8 +136,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       try {
-        // Send USDC on Stellar
-        const stellarTxHash = await StellarService.sendUSDC(
+        // Send XLM on Stellar
+        const stellarTxHash = await StellarService.sendXLM(
           wallet.secretKey,
           destinationAddress,
           amount,
@@ -148,7 +148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateTransactionStatus(transaction.id, "completed", stellarTxHash);
 
         // Update wallet balance
-        const newBalance = await StellarService.getUSDCBalance(wallet.publicKey);
+        const newBalance = await StellarService.getXLMBalance(wallet.publicKey);
         await storage.updateWalletBalance(wallet.id, newBalance);
 
         res.json({
@@ -189,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           let balance = "0";
           if (wallet) {
-            balance = await StellarService.getUSDCBalance(wallet.publicKey);
+            balance = await StellarService.getXLMBalance(wallet.publicKey);
             await storage.updateWalletBalance(wallet.id, balance);
           }
 
