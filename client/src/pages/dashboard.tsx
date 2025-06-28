@@ -16,7 +16,19 @@ export default function DashboardPage() {
     }
   }, [setLocation]);
 
-  const { data: profile, isLoading } = useQuery({
+  interface ProfileData {
+    business: {
+      id: number;
+      name: string;
+      email: string;
+    };
+    wallet: {
+      publicKey: string;
+      balance: string;
+    };
+  }
+
+  const { data: profile, isLoading } = useQuery<ProfileData>({
     queryKey: ["/api/profile"],
     enabled: isAuthenticated(),
     queryFn: getQueryFn({ on401: "throw" }),

@@ -23,11 +23,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create Stellar wallet
       const stellarWallet = await StellarService.createWallet();
-      await storage.createWallet({
+      
+      // Get the actual balance after funding (should be ~10,000 XLM)
+      const actualBalance = await StellarService.getXLMBalance(stellarWallet.publicKey);
+      
+      const wallet = await storage.createWallet({
         businessId: business.id,
         publicKey: stellarWallet.publicKey,
         secretKey: stellarWallet.secretKey,
-        balance: "0",
+        balance: actualBalance,
       });
 
       // Start monitoring the new wallet for incoming transactions

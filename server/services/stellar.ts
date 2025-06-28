@@ -18,6 +18,9 @@ export class StellarService {
         throw new Error("Failed to fund testnet account");
       }
 
+      // Wait a moment for the funding to propagate
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       return {
         publicKey: keypair.publicKey(),
         secretKey: keypair.secret(),

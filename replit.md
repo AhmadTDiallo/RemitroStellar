@@ -107,6 +107,12 @@ The database uses Drizzle ORM for type-safe database operations and schema manag
   - Updated all UI components to show XLM instead of USDC
   - Modified balance display to show 7 decimal places (XLM precision)
   - Updated validation rules for XLM amounts
+- June 28, 2025. Added real Stellar wallet monitoring and modern CRM/ERP dashboard
+  - Implemented automated wallet monitoring service for incoming transactions
+  - Restructured application with separate pages for Send Money and Invoices
+  - Created modern dashboard with overview statistics and quick actions
+  - Fixed authentication token issues in API queries
+  - Enhanced wallet creation with proper balance fetching from Stellar testnet
 
 ## User Preferences
 
